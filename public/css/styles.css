@@ -16,7 +16,9 @@ body {
 }
 
 .error_msg{
+  padding: 10px 0;
   text-align: center;
   background-color: #F69191;
   color: white;
+  border-radius: 3px;
 }

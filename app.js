@@ -3,6 +3,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const ejs = require('ejs')
 const mongoose = require('mongoose')
+const encrypt = require('mongoose-encryption')
 
 const app = express()
 
@@ -17,6 +18,9 @@ const userSchema = new mongoose.Schema({
   email: String
 })
 
+const secret = "Thisisourlittlesecret";
+userSchema.plugin(encrypt, { secret: secret, encryptedFields: ['password']});
+
 const User = mongoose.model("User",userSchema)
 
 app.get('/', (req,res)=>{
@@ -24,7 +28,7 @@ app.get('/', (req,res)=>{
 })
 
 app.get('/login', (req,res)=>{
-  res.render('login',{errorText:""});
+  res.render('login',{errorText:"", display: 'display: none;'});
 })
 
 app.post('/login', (req,res)=>{
@@ -36,10 +40,10 @@ app.post('/login', (req,res)=>{
         if(foundUser.password === req.body.password){
           res.render('secrets')
         }else{
-          res.render('login', {errorText: "Enter correct Password and try again please !"})
+          res.render('login', {errorText: "Enter correct Password and try again please !", display: 'display:block;'})
         }
       }else{
-        res.render('login', {errorText: "User not registered !"})
+        res.render('login', {errorText: "User not registered !", display: 'display:block;'})
       }
     }
   })
