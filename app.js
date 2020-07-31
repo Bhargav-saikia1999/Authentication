@@ -3,8 +3,17 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const ejs = require('ejs')
 const mongoose = require('mongoose')
-// const encrypt = require('mongoose-encryption') // FOR ENCRYPTION
-const md5 = require('md5') // FOR HASHING
+
+// FOR ENCRYPTION
+// const encrypt = require('mongoose-encryption')
+
+// FOR HASHING (using md5 algorithm)
+// const md5 = require('md5')
+
+// FOR ITERATIVE-->HASHING & SALTING (using bcrypt algorithm)
+const bcrypt = require('bcrypt')
+const saltRounds = 10
+
 
 const app = express()
 
@@ -35,11 +44,14 @@ app.post('/login', (req,res)=>{
       console.log(err);
     }else{
       if(foundUser){
-        if(foundUser.password === md5(req.body.password)){
-          res.render('secrets')
-        }else{
-          res.render('login', {errorText: "Enter correct Password and try again please !", display: 'display:block;'})
-        }
+          bcrypt.compare(req.body.password, foundUser.password, function(error, result) {
+            // result is a boolean which is true if hashses match
+            if(result){
+              res.render('secrets')
+            }else{
+              res.render('login', {errorText: "Enter correct Password and try again please !", display: 'display:block;'})
+            }
+          });
       }else{
         res.render('login', {errorText: "User not registered !", display: 'display:block;'})
       }
@@ -55,18 +67,24 @@ app.post('/register', (req,res)=>{
   email = req.body.username
   password = req.body.password
 
-  const newUser = new User({
-    email: email,
-    password: md5(password)
-  })
-  newUser.save((err)=>{
+  // bcrypt hashing with salting before storing in the DB
+  bcrypt.hash(password, saltRounds, function(err, hash) {
     if(!err){
-      res.render('secrets')
+      const newUser = new User({
+        email: email,
+        password: hash
+      })
+      newUser.save((err)=>{
+        if(!err){
+          res.render('secrets')
+        }else{
+          console.log(err)
+        }
+      })
     }else{
-      console.log(err)
+      console.log(err);
     }
-  })
-
+  });
 })
 
 
